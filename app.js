@@ -3,6 +3,12 @@
 const $=id=>document.getElementById(id);
 const storageKey='accompany-attendance-settings-v1';
 let config={...Roster.defaults},base,states={},extras=[],stale=true,settingsDirty=false;
+let exclusions={'연장 보고':[],'퇴근 보고':[]};
+const reportType=()=>$('report-type').value;
+const isAttendance=()=>reportType()==='출근 보고';
+const excluded=()=>isAttendance()?[]:exclusions[reportType()];
+const hasSelections=()=>Object.keys(states).length||extras.length||Object.values(exclusions).some(ids=>ids.length);
+function clearSelections(){states={};extras=[];exclusions={'연장 보고':[],'퇴근 보고':[]};}
 let sharePending=false,shareFeedbackVersion=0;
 function notice(text){$('notice').textContent=text;$('notice').hidden=!text;}
 function readBase(candidate){return {partner:Roster.parseRoster(candidate.partner,'partner')};}
@@ -34,17 +40,29 @@ function undoRetire(person){
  base=readBase(config);extras=extras.filter(p=>p.id!==person.id);delete states[person.id];settingsDirty=false;saveConfig(person.name+' 님의 퇴사 처리를 취소했습니다.');invalidate();render();updateGroups();
 }
 function render(){
- $('roster').replaceChildren();$('totals').replaceChildren();let absent=0,quit=0;
+ $('roster').replaceChildren();$('totals').replaceChildren();let absent=0,quit=0,omitted=0;
+ $('reset').textContent=isAttendance()?'전체 초기화':'제외 초기화';
+ $('roster-title').textContent=isAttendance()?'1. 변동 인원 선택':'1. '+reportType().replace(' 보고','')+' 제외 인원';
+ $('roster-help').textContent=isAttendance()?'이름을 누르고 사유를 고르세요. 선택하지 않은 사람은 모두 출근입니다.':reportType()+'에 포함하지 않을 사람을 누르세요. 다시 누르면 포함됩니다. 연차·공가·반차·퇴사는 출근 보고에서 설정하며 모든 보고에 반영됩니다.';
+ $('copy-overtime').hidden=reportType()!=='퇴근 보고';
  for(const org of ['partner']){
-  const title=config.company,s=Roster.summarize(people(),states,org);absent+=s.absent;quit+=s.quit;
-  const card=element('div','total');card.append(element('span','',title),element('strong','',`${s.present} / ${s.total}`),element('span','',`결근 ${s.absent}명`));$('totals').append(card);$('roster').append(element('h3','',title));
+  const title=config.company,s=Roster.summarize(people(),states,org,excluded());absent+=s.absent;quit+=s.quit;omitted+=s.excluded;
+  const card=element('div','total');card.append(element('span','',title+' · '+reportType()),element('strong','',`${s.present} / ${s.total}`),element('span','',`결근 ${s.absent}명`+(isAttendance()?'':` · 보고 제외 ${s.excluded}명`)));$('totals').append(card);$('roster').append(element('h3','',title));
   for(const group of [...new Set([...base[org].groups,...extras.filter(p=>p.org===org).map(p=>p.group)])]){
    const members=people().filter(p=>p.org===org&&p.group===group);if(!members.length)continue;
    $('roster').append(element('div','group-label',group));const names=element('div','names'),reasons=element('div');
    for(const person of members){
-    const selected=!!states[person.id],button=element('button','person'+(person.retired?' retired':''),person.name);button.type='button';button.setAttribute('aria-pressed',String(selected));button.setAttribute('aria-label',`${title} ${group} ${person.name}, ${states[person.id]?.status||'출근'}`);
-    button.onclick=()=>{if(person.retired)return;if(selected)delete states[person.id];else states[person.id]={status:'연차',reason:''};invalidate();render();};names.append(button);
-    if(selected){
+    const personStatus=states[person.id]?.status||'출근',omittedPerson=excluded().includes(person.id);
+    const selected=!!states[person.id]||omittedPerson,button=element('button','person'+(person.retired?' retired':''),person.name);button.type='button';button.setAttribute('aria-pressed',String(selected));button.setAttribute('aria-label',`${title} ${group} ${person.name}, ${omittedPerson?reportType()+' 제외':personStatus}`);
+    if(!isAttendance()&&!['출근','반차','오전반차','오후반차'].includes(personStatus))button.disabled=true;
+    button.onclick=()=>{
+     if(person.retired)return;
+     if(!isAttendance())exclusions[reportType()]=omittedPerson?excluded().filter(id=>id!==person.id):[...excluded(),person.id];
+     else if(states[person.id])delete states[person.id];else states[person.id]={status:'연차',reason:''};
+     invalidate();render();
+    };names.append(button);
+    if(selected&&!isAttendance())reasons.append(element('p','hint',person.name+' · '+(omittedPerson?reportType()+' 제외'+(personStatus==='출근'?'':' · '+personStatus):personStatus)));
+    if(selected&&isAttendance()){
      const box=element('div','absence'),label=element('label','',person.name+' · 사유'),select=element('select');
      select.setAttribute('aria-label',person.name+' 사유');for(const status of ['연차','공가','오전반차','오후반차','결근','퇴사']){const opt=element('option','',status==='결근'?'기타 결근':status);opt.value=status;select.append(opt);}select.value=states[person.id].status;
      select.disabled=!!person.retired;select.onchange=()=>{states[person.id].status=select.value;invalidate();render();};label.append(select);box.append(label);
@@ -58,9 +76,14 @@ function render(){
    $('roster').append(names,reasons);
   }
  }
- $('selection-count').textContent=`결근 ${absent}명`+(quit?` · 퇴사 ${quit}명`:'');
- $('extra-list').replaceChildren();for(const p of extras){const row=element('p','',`${p.name} · ${p.group}${p.isNew?' · 신규':''}`),remove=element('button','','삭제');remove.onclick=()=>{extras=extras.filter(x=>x.id!==p.id);delete states[p.id];invalidate();render();};row.append(remove);$('extra-list').append(row);}
+ $('selection-count').textContent=isAttendance()?`결근 ${absent}명`+(quit?` · 퇴사 ${quit}명`:''):`${reportType()} · 제외 ${omitted}명`;
+ $('extra-list').replaceChildren();for(const p of extras){const row=element('p','',`${p.name} · ${p.group}${p.isNew?' · 신규':''}`),remove=element('button','','삭제');remove.onclick=()=>{extras=extras.filter(x=>x.id!==p.id);delete states[p.id];for(const type of Object.keys(exclusions))exclusions[type]=exclusions[type].filter(id=>id!==p.id);invalidate();render();};row.append(remove);$('extra-list').append(row);}
 }
+$('report-type').onchange=()=>{invalidate();render();notice('');};
+$('copy-overtime').onclick=()=>{
+ if(exclusions['퇴근 보고'].length&&!confirm('퇴근 보고의 제외 인원을 연장 보고와 같게 바꿀까요?'))return;
+ exclusions['퇴근 보고']=[...exclusions['연장 보고']];invalidate();render();notice('연장 보고 인원을 퇴근 보고에 적용했습니다. 확인 후 글을 만들어 주세요.');
+};
 function updateGroups(){const org=$('add-org').value;$('add-group').replaceChildren();for(const group of base[org].groups){const option=element('option','',group);option.value=group;$('add-group').append(option);}}
 $('add-org').onchange=updateGroups;
 $('add-form').onsubmit=e=>{
@@ -73,20 +96,29 @@ for(const key of Object.keys(config))$(key).oninput=()=>{settingsDirty=true;inva
 $('save').onclick=()=>{
  const candidate=Object.fromEntries(Object.keys(config).map(key=>[key,$(key).value.trim()]));
  try{if(!candidate.company)throw new Error('업체명을 입력하세요.');const parsed=readBase(candidate);
-  if((Object.keys(states).length||extras.length)&&!confirm('기본 명단을 저장하면 오늘 선택과 추가 인원이 초기화됩니다. 저장할까요?'))return;
-  config=candidate;base=parsed;states={};extras=[];settingsDirty=false;invalidate();render();updateGroups();
+  if(hasSelections()&&!confirm('기본 명단을 저장하면 모든 보고의 오늘 선택과 추가 인원이 초기화됩니다. 저장할까요?'))return;
+  config=candidate;base=parsed;clearSelections();settingsDirty=false;invalidate();render();updateGroups();
   saveConfig('기본 설정을 저장했습니다. 오늘 결근 인원을 선택해 주세요.');
  }catch(e){notice(e.message);}
 };
 $('date').onchange=()=>{
- if((Object.keys(states).length||extras.length||!$('result').hidden)&&!confirm('날짜를 변경하면 선택 인원과 완성 글이 초기화됩니다. 변경할까요?')){$('date').value=previousDate;return;}
- previousDate=$('date').value;states={};extras=[];$('result').hidden=true;$('output').value='';invalidate();render();
+ if((hasSelections()||!$('result').hidden)&&!confirm('날짜를 변경하면 모든 보고의 선택 인원과 완성 글이 초기화됩니다. 변경할까요?')){$('date').value=previousDate;return;}
+ previousDate=$('date').value;clearSelections();$('result').hidden=true;$('output').value='';invalidate();render();
 };
-$('reset').onclick=()=>{if((Object.keys(states).length||extras.length)&&!confirm('결근 선택과 오늘 추가 인원을 모두 초기화할까요?'))return;states={};extras=[];invalidate();render();};
+$('reset').onclick=()=>{
+ if(isAttendance()){
+  if(hasSelections()&&!confirm('출근 상태, 연장·퇴근 보고의 제외 인원과 오늘 추가 인원을 모두 초기화할까요?'))return;
+  clearSelections();
+ }else{
+  if(excluded().length&&!confirm(reportType()+'의 제외 인원을 초기화할까요?'))return;
+  exclusions[reportType()]=[];
+ }
+ invalidate();render();
+};
 $('generate').onclick=()=>{
  if(settingsDirty){notice('수정한 기본 설정을 먼저 저장해 주세요.');$('settings').open=true;$('settings').scrollIntoView({behavior:'smooth'});return;}
  if(!$('result').hidden&&!stale&&$('output').value&&!confirm('완성 글을 새로 만들까요? 직접 수정한 내용은 덮어씁니다.'))return;
- try{$('output').value=Roster.generate(people(),states,{...config,date:$('date').value},{partner:base.partner.groups});stale=false;$('result').hidden=false;$('stale').hidden=true;$('copy').disabled=false;$('share').disabled=false;$('status').textContent='';notice('');$('result').scrollIntoView({behavior:'smooth'});}catch(e){notice(e.message);}
+ try{$('output').value=Roster.generate(people(),states,{...config,date:$('date').value,reportType:reportType(),excluded:excluded()},{partner:base.partner.groups});stale=false;$('result').hidden=false;$('stale').hidden=true;$('copy').disabled=false;$('share').disabled=false;$('status').textContent='';notice('');$('result').scrollIntoView({behavior:'smooth'});}catch(e){notice(e.message);}
 };
 function ready(){if(stale){$('status').textContent='확인 · 글 만들기를 먼저 눌러주세요.';return false;}if(!$('output').value.trim()){$('status').textContent='복사·공유할 글이 없습니다.';return false;}return true;}
 function selectText(){$('output').focus();$('output').select();$('output').setSelectionRange(0,$('output').value.length);}

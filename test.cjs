@@ -21,6 +21,18 @@ CAD : 6/6 (이효정 이예원 조은정 장채연 강민주 방수희)
 반차 : 0
 신규 : 0`;
 assert.equal(R.generate(people,{},settings,groups),expected);
+const excluded=people.filter(p=>['변진석','노명성','방수희'].includes(p.name)).map(p=>p.id);
+const laterExpected=expected.replace('26년 10월 20일','26년 10월 19일')
+ .replace('총원 : 16/16','총원 : 13/16')
+ .replace('BULK : 6/6 (이종섭 강경석 엄정태 안기석 변진석 이호동)','BULK : 5/6 (이종섭 강경석 엄정태 안기석 이호동)')
+ .replace('전기,진공 : 2/2 (노명성 김우진)','전기,진공 : 1/2 (김우진)')
+ .replace('CAD : 6/6 (이효정 이예원 조은정 장채연 강민주 방수희)','CAD : 5/6 (이효정 이예원 조은정 장채연 강민주)');
+for(const reportType of ['연장 보고','퇴근 보고']){
+ assert.equal(R.generate(people,{}, {...settings,date:'2026-10-19',reportType,excluded},groups),laterExpected.replace('출근 보고',reportType));
+}
+assert.equal(R.generate(people,{}, {...settings,reportType:'출근 보고',excluded},groups),expected);
+assert.equal(R.summarize(people,{},'partner',excluded).absent,0);
+assert.throws(()=>R.generate(people,{}, {...settings,reportType:'잘못된 보고'},groups),/보고 종류/);
 const lee=people.find(p=>p.name==='이호동');
 for(const status of ['연차','공가','결근']){
  const text=R.generate(people,{[lee.id]:{status}},settings,groups);
@@ -42,6 +54,10 @@ const ahn=people.find(p=>p.name==='안기석');
 const split=R.generate(people,{[lee.id]:{status:'오전반차'},[ahn.id]:{status:'오후반차'}},settings,groups);
 assert.match(split,/반차 : 2 \(안기석 - 오후반차 이호동 - 오전반차\)/);
 assert.match(split,/총원 : 16\/16/);
+const mixed=R.generate(people,{[lee.id]:{status:'연차'},[ahn.id]:{status:'오후반차'}},{...settings,reportType:'연장 보고',excluded},groups);
+assert.match(mixed,/총원 : 12\/16/);
+assert.match(mixed,/연차 : 1 \(이호동\)/);
+assert.match(mixed,/반차 : 1 \(안기석 - 오후반차\)/);
 const quit=R.generate(people,{[lee.id]:{status:'퇴사'}},settings,groups);
 assert.match(quit,/총원 : 15\/15/);
 assert.match(quit,/퇴사 : 1 \(이호동\)/);

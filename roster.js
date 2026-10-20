@@ -39,21 +39,25 @@ const removePerson=(text,person)=>updateRoster(text,person,true);
 const addPerson=(text,person)=>updateRoster(text,person,false);
 const halfDay=status=>['반차','오전반차','오후반차'].includes(status);
 const attended=status=>status==='출근'||halfDay(status);
-function summarize(people,states,org){
+function summarize(people,states,org,excluded=[]){
  const all=people.filter(p=>p.org===org),active=all.filter(p=>(states[p.id]?.status||'출근')!=='퇴사');
- const present=active.filter(p=>attended(states[p.id]?.status||'출근'));
- return {total:active.length,present:present.length,absent:active.length-present.length,newCount:active.filter(p=>p.isNew).length,quit:all.filter(p=>states[p.id]?.status==='퇴사').length};
+ const attending=active.filter(p=>attended(states[p.id]?.status||'출근'));
+ const present=attending.filter(p=>!excluded.includes(p.id));
+ return {total:active.length,present:present.length,absent:active.length-attending.length,excluded:attending.length-present.length,newCount:active.filter(p=>p.isNew).length,quit:all.filter(p=>states[p.id]?.status==='퇴사').length};
 }
 function generate(people,states,settings,groupMap){
  if(!/^\d{4}-\d{2}-\d{2}$/.test(settings.date||''))throw new Error('보고 날짜를 선택하세요.');
  const day=new Date(settings.date+'T12:00:00');
  if(Number.isNaN(day.getTime())||day.getFullYear()!==+settings.date.slice(0,4)||day.getMonth()+1!==+settings.date.slice(5,7)||day.getDate()!==+settings.date.slice(8,10))throw new Error('올바른 보고 날짜를 선택하세요.');
  const status=p=>states[p.id]?.status||'출근';
+ const reportType=settings.reportType||'출근 보고';
+ if(!['출근 보고','연장 보고','퇴근 보고'].includes(reportType))throw new Error('보고 종류를 선택하세요.');
+ const excluded=reportType==='출근 보고'?[]:(settings.excluded||[]);
  for(const p of people)if(!['출근','반차','오전반차','오후반차','연차','공가','결근','퇴사'].includes(status(p)))throw new Error(p.name+'의 출근 상태를 확인하세요.');
- const org='partner',s=summarize(people,states,org),all=people.filter(p=>p.org===org);
- const lines=[settings.date.slice(2,4)+'년 '+settings.date.slice(5,7)+'월 '+settings.date.slice(8,10)+'일','출근 보고','외주 ('+settings.company+')','',`총원 : ${s.present}/${s.total}`];
+ const org='partner',s=summarize(people,states,org,excluded),all=people.filter(p=>p.org===org);
+ const lines=[settings.date.slice(2,4)+'년 '+settings.date.slice(5,7)+'월 '+settings.date.slice(8,10)+'일',reportType,'외주 ('+settings.company+')','',`총원 : ${s.present}/${s.total}`];
  for(const group of [...new Set([...(groupMap[org]||[]),...all.map(p=>p.group)])]){
-   const members=all.filter(p=>p.group===group&&status(p)!=='퇴사'),present=members.filter(p=>attended(status(p)));
+   const members=all.filter(p=>p.group===group&&status(p)!=='퇴사'),present=members.filter(p=>attended(status(p))&&!excluded.includes(p.id));
    lines.push(group+' : '+present.length+'/'+members.length+(present.length?' ('+present.map(p=>p.name).join(' ')+')':''));
   }
   lines.push('');
