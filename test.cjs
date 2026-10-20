@@ -31,6 +31,17 @@ for(const status of ['연차','공가','결근']){
 const half=R.generate(people,{[lee.id]:{status:'반차'}},settings,groups);
 assert.match(half,/총원 : 16\/16/);
 assert.match(half,/반차 : 1 \(이호동\)/);
+for(const status of ['오전반차','오후반차']){
+ const states={[lee.id]:{status}};
+ const text=R.generate(people,states,settings,groups);
+ assert.match(text,/총원 : 16\/16/);
+ assert(text.includes('반차 : 1 (이호동 - '+status+')'));
+ assert.equal(R.summarize(people,states,'partner').absent,0);
+}
+const ahn=people.find(p=>p.name==='안기석');
+const split=R.generate(people,{[lee.id]:{status:'오전반차'},[ahn.id]:{status:'오후반차'}},settings,groups);
+assert.match(split,/반차 : 2 \(안기석 - 오후반차 이호동 - 오전반차\)/);
+assert.match(split,/총원 : 16\/16/);
 const quit=R.generate(people,{[lee.id]:{status:'퇴사'}},settings,groups);
 assert.match(quit,/총원 : 15\/15/);
 assert.match(quit,/퇴사 : 1 \(이호동\)/);

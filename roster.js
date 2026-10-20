@@ -37,9 +37,11 @@ function updateRoster(text,person,remove){
 }
 const removePerson=(text,person)=>updateRoster(text,person,true);
 const addPerson=(text,person)=>updateRoster(text,person,false);
+const halfDay=status=>['반차','오전반차','오후반차'].includes(status);
+const attended=status=>status==='출근'||halfDay(status);
 function summarize(people,states,org){
  const all=people.filter(p=>p.org===org),active=all.filter(p=>(states[p.id]?.status||'출근')!=='퇴사');
- const present=active.filter(p=>['출근','반차'].includes(states[p.id]?.status||'출근'));
+ const present=active.filter(p=>attended(states[p.id]?.status||'출근'));
  return {total:active.length,present:present.length,absent:active.length-present.length,newCount:active.filter(p=>p.isNew).length,quit:all.filter(p=>states[p.id]?.status==='퇴사').length};
 }
 function generate(people,states,settings,groupMap){
@@ -47,17 +49,17 @@ function generate(people,states,settings,groupMap){
  const day=new Date(settings.date+'T12:00:00');
  if(Number.isNaN(day.getTime())||day.getFullYear()!==+settings.date.slice(0,4)||day.getMonth()+1!==+settings.date.slice(5,7)||day.getDate()!==+settings.date.slice(8,10))throw new Error('올바른 보고 날짜를 선택하세요.');
  const status=p=>states[p.id]?.status||'출근';
- for(const p of people)if(!['출근','반차','연차','공가','결근','퇴사'].includes(status(p)))throw new Error(p.name+'의 출근 상태를 확인하세요.');
+ for(const p of people)if(!['출근','반차','오전반차','오후반차','연차','공가','결근','퇴사'].includes(status(p)))throw new Error(p.name+'의 출근 상태를 확인하세요.');
  const org='partner',s=summarize(people,states,org),all=people.filter(p=>p.org===org);
  const lines=[settings.date.slice(2,4)+'년 '+settings.date.slice(5,7)+'월 '+settings.date.slice(8,10)+'일','출근 보고','외주 ('+settings.company+')','',`총원 : ${s.present}/${s.total}`];
  for(const group of [...new Set([...(groupMap[org]||[]),...all.map(p=>p.group)])]){
-   const members=all.filter(p=>p.group===group&&status(p)!=='퇴사'),attended=members.filter(p=>['출근','반차'].includes(status(p)));
-   lines.push(group+' : '+attended.length+'/'+members.length+(attended.length?' ('+attended.map(p=>p.name).join(' ')+')':''));
+   const members=all.filter(p=>p.group===group&&status(p)!=='퇴사'),present=members.filter(p=>attended(status(p)));
+   lines.push(group+' : '+present.length+'/'+members.length+(present.length?' ('+present.map(p=>p.name).join(' ')+')':''));
   }
   lines.push('');
   for(const key of ['연차','공가','퇴사','반차','신규','결근']){
-   const members=all.filter(p=>key==='신규'?p.isNew&&status(p)!=='퇴사':status(p)===key);if(key==='결근'&&!members.length)continue;
-   lines.push(key+' : '+members.length+(members.length?' ('+members.map(p=>p.name+(key==='결근'&&states[p.id]?.reason?' - '+states[p.id].reason.replace(/[\r\n]+/g,' '):'')).join(' ')+')':''));
+   const members=all.filter(p=>key==='신규'?p.isNew&&status(p)!=='퇴사':key==='반차'?halfDay(status(p)):status(p)===key);if(key==='결근'&&!members.length)continue;
+   lines.push(key+' : '+members.length+(members.length?' ('+members.map(p=>p.name+(key==='반차'&&status(p)!=='반차'?' - '+status(p):'')+(key==='결근'&&states[p.id]?.reason?' - '+states[p.id].reason.replace(/[\r\n]+/g,' '):'')).join(' ')+')':''));
   }
  return lines.join('\n');
 }

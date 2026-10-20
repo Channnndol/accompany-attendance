@@ -3,6 +3,7 @@
 const $=id=>document.getElementById(id);
 const storageKey='accompany-attendance-settings-v1';
 let config={...Roster.defaults},base,states={},extras=[],stale=true,settingsDirty=false;
+let sharePending=false,shareFeedbackVersion=0;
 function notice(text){$('notice').textContent=text;$('notice').hidden=!text;}
 function readBase(candidate){return {partner:Roster.parseRoster(candidate.partner,'partner')};}
 try{
@@ -15,7 +16,7 @@ const localDate=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.ge
 $('date').value=localDate();let previousDate=$('date').value;
 const people=()=>[...base.partner.people,...extras];
 const element=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el;};
-function invalidate(){stale=true;$('stale').hidden=$('result').hidden;$('copy').disabled=true;$('share').disabled=true;$('status').textContent='';}
+function invalidate(){stale=true;shareFeedbackVersion++;$('stale').hidden=$('result').hidden;$('copy').disabled=true;$('share').disabled=true;$('share-feedback').hidden=true;$('status').textContent='';}
 function saveConfig(message){
  try{localStorage.setItem(storageKey,JSON.stringify(config));notice(message);return true;}
  catch(e){notice('현재 화면에는 반영했지만 브라우저에 저장하지 못했습니다. 페이지를 닫기 전에 기본 명단을 확인해 주세요.');return false;}
@@ -45,7 +46,7 @@ function render(){
     button.onclick=()=>{if(person.retired)return;if(selected)delete states[person.id];else states[person.id]={status:'연차',reason:''};invalidate();render();};names.append(button);
     if(selected){
      const box=element('div','absence'),label=element('label','',person.name+' · 사유'),select=element('select');
-     select.setAttribute('aria-label',person.name+' 사유');for(const status of ['연차','공가','반차','결근','퇴사']){const opt=element('option','',status==='결근'?'기타 결근':status);opt.value=status;select.append(opt);}select.value=states[person.id].status;
+     select.setAttribute('aria-label',person.name+' 사유');for(const status of ['연차','공가','오전반차','오후반차','결근','퇴사']){const opt=element('option','',status==='결근'?'기타 결근':status);opt.value=status;select.append(opt);}select.value=states[person.id].status;
      select.disabled=!!person.retired;select.onchange=()=>{states[person.id].status=select.value;invalidate();render();};label.append(select);box.append(label);
      if(states[person.id].status==='결근'){const input=element('input');input.placeholder='사유 입력 (선택)';input.maxLength=60;input.value=states[person.id].reason;input.setAttribute('aria-label',person.name+' 기타 결근 사유');input.oninput=()=>{states[person.id].reason=input.value;invalidate();};box.append(input);}
      if(states[person.id].status==='퇴사'){
@@ -92,16 +93,47 @@ function selectText(){$('output').focus();$('output').select();$('output').setSe
 const selectButton=element('button','secondary','글 전체 선택');selectButton.type='button';selectButton.id='select-text';selectButton.hidden=true;
 $('status').before(selectButton);
 selectButton.onclick=()=>{if(!ready())return;selectText();$('status').textContent='글을 선택했습니다. 선택한 글을 길게 눌러 복사하세요. PC에서는 Ctrl+C를 누르세요.';};
-$('copy').onclick=async()=>{
+async function copyReport(){
  if(!ready())return;
  try{if(!navigator.clipboard?.writeText)throw new Error('unsupported');await navigator.clipboard.writeText($('output').value);$('status').textContent='복사했습니다. 카카오톡 대화방에 붙여넣으세요.';}
  catch(e){selectText();let copied=false;try{copied=document.execCommand('copy');}catch(e){}selectButton.hidden=copied;$('status').textContent=copied?'복사했습니다. 카카오톡 대화방에 붙여넣으세요.':'자동 복사를 사용할 수 없습니다. 글 전체 선택 버튼을 누르고 글을 길게 눌러 복사하세요. 카카오톡 안에서 열었다면 기본 브라우저에서 다시 열어보세요.';}
+}
+$('copy').onclick=copyReport;
+$('share-copy').onclick=async()=>{
+ if(!ready())return;
+ shareFeedback('글을 복사하고 있습니다. 복사 안내를 확인한 뒤 카카오톡 대화방에 붙여넣으세요.');
+ await copyReport();
+ shareFeedback($('status').textContent);
 };
+function shareFeedback(message){
+ shareFeedbackVersion++;
+ $('share-feedback').hidden=false;$('share-message').textContent=message;
+}
 $('share').onclick=async()=>{
  if(!ready())return;
- if(!navigator.share){$('status').textContent='이 환경에서는 공유 메뉴를 열 수 없습니다. 텍스트 복사를 이용하세요.';return;}
- try{const payload={text:$('output').value};if(navigator.canShare&&!navigator.canShare(payload)){$('status').textContent='이 브라우저에서 텍스트 공유를 지원하지 않습니다. 텍스트 복사를 이용하세요.';return;}await navigator.share(payload);$('status').textContent='공유 메뉴에 글을 전달했습니다. 전송 여부는 선택한 앱에서 확인하세요.';}
- catch(e){$('status').textContent=e.name==='AbortError'?'공유를 취소했거나 공유할 앱이 없습니다.':'공유 메뉴를 열지 못했습니다. 텍스트 복사를 이용하세요.';}
+ if(sharePending){shareFeedback('이전 공유 요청의 응답을 기다리고 있습니다. 공유창이 보이지 않으면 아래 버튼으로 글을 복사해 카카오톡에 붙여넣으세요.');return;}
+ if(typeof navigator.share!=='function'){
+  shareFeedback('이 앱에서는 텍스트 공유창을 열 수 없습니다. 아래 버튼으로 글을 복사한 뒤 카카오톡 대화방에 붙여넣으세요.');
+  $('share-feedback').scrollIntoView({block:'nearest'});
+  return;
+ }
+ shareFeedback('휴대폰 공유 메뉴를 요청했습니다. 공유창이 보이지 않으면 아래 복사 버튼을 이용하세요.');
+ const version=shareFeedbackVersion;
+ const current=()=>version===shareFeedbackVersion&&!stale;
+ sharePending=true;
+ const timeout=setTimeout(()=>{
+  if(current())$('share-message').textContent='공유 응답을 기다리고 있습니다. 공유창이 열려 있으면 앱을 선택하세요. 아무 창도 보이지 않으면 아래 버튼으로 글을 복사하세요.';
+ },4000);
+ try{
+  // Call from the tap handler, before any await. A text-only request does not
+  // need a canShare preflight; the actual share result determines support.
+  const request=navigator.share({text:$('output').value});
+  $('share-feedback').scrollIntoView({block:'nearest'});
+  await request;
+  if(current())$('share-message').textContent='공유 요청이 완료되었습니다. 실제 전송 여부는 선택한 앱에서 확인하세요.';
+ }catch(e){
+  if(current())$('share-message').textContent=e?.name==='AbortError'?'공유가 취소되었거나 공유할 앱을 찾지 못했습니다. 필요하면 아래 복사 버튼을 이용하세요.':'이 앱에서 공유창을 열지 못했습니다. 아래 버튼으로 글을 복사해 카카오톡에 붙여넣거나 Chrome에서 이 페이지를 열어주세요.';
+ }finally{clearTimeout(timeout);sharePending=false;}
 };
 if(!navigator.share)$('share-help').textContent='현재 환경은 공유 메뉴를 지원하지 않습니다. 복사를 이용하세요. 휴대폰 공유 기능은 지원 브라우저의 HTTPS 주소에서 사용할 수 있습니다.';
 render();updateGroups();invalidate();
