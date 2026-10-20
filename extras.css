@@ -1,0 +1,21 @@
+footer small {
+  display: block;
+  margin-top: 9px;
+  font-size: 11px;
+  letter-spacing: .06em;
+}
+
+.danger {
+  background: #9c3f32;
+}
+
+.person.retired {
+  background: #f2e9e7;
+  border-color: #d8b8b2;
+  color: #7d4138;
+}
+
+.absence button {
+  width: 100%;
+  margin-top: 10px;
+}

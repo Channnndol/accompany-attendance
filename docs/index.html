@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light"><meta name="theme-color" content="#f3f5f1"><title>ACCOMPANY TECH 출근 보고</title><style>html,body{background:#f3f5f1;color:#223c38;color-scheme:only light}#startup{margin:16px 0;padding:16px;border:1px solid #d6b477;border-radius:12px;background:#fff5df;color:#634711;font:15px/1.7 system-ui,sans-serif}#startup a{display:inline-block;margin-top:8px;color:#194f43;text-decoration:underline}[hidden]{display:none!important}</style><style>:root{font-family:system-ui,-apple-system,'Malgun Gothic',sans-serif;color:#223c38;background:#f3f5f1;font-synthesis:none}*{box-sizing:border-box}body{margin:0}main{max-width:760px;margin:auto;padding:30px 18px 40px}header{padding:10px 4px 14px}.eyebrow{font-size:11px;letter-spacing:2px;color:#58746c;font-weight:700}h1{font-size:clamp(25px,5vw,34px);letter-spacing:-1px;margin:10px 0}p{line-height:1.6;margin:10px 0}header p{color:#5e7069;font-size:14px}section,details{background:white;border:1px solid #dde5dd;border-radius:18px;padding:20px;margin-top:16px}h2{font-size:18px;margin:0}h3{font-size:16px;margin:24px 0 12px}.hint{color:#697970;font-size:13px;line-height:1.7}.date-card label{margin-top:0}.totals{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px}.total{background:#e5eee6;border-radius:14px;padding:16px}.total strong{display:block;font-size:25px;margin-top:5px}.total span{font-size:13px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:8px}button,input,select,textarea{font:inherit}button{border:0;border-radius:11px;min-height:46px;padding:11px 16px;background:#214f43;color:white;font-weight:650;cursor:pointer}button:disabled{opacity:.4;cursor:default}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #c08028;outline-offset:3px}button.secondary{background:#e8efe8;color:#254738}.text-button{background:transparent;color:#527268;font-size:13px;padding:8px}.group-label{margin:18px 0 8px;font-size:12px;font-weight:700;color:#778479}.names{display:flex;flex-wrap:wrap;gap:8px}.person{background:#f1f4ef;border:1px solid #e1e7de;color:#385344;padding:9px 15px;min-width:73px}.person[aria-pressed=true]{background:#fff0dd;border-color:#cb954a;color:#805615}.absence{margin-top:10px;border-left:3px solid #d9ad68;padding:8px 12px;background:#fffaf3;border-radius:5px}.absence label{font-size:13px;margin-top:3px}.absence select{margin:6px 0}.absence input{margin-top:6px}label{display:block;margin:16px 0 7px;font-size:14px;font-weight:600}input:not([type=checkbox]),select,textarea{display:block;width:100%;min-width:0;max-width:100%;border:1px solid #cbd7cd;border-radius:9px;background:white;color:#273c30;padding:12px;font-size:16px}textarea{resize:vertical;line-height:1.65;font-size:16px}.check{display:flex;align-items:center;gap:9px;line-height:1.5}.check input{width:20px;height:20px}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}summary{font-weight:650;cursor:pointer;min-height:25px}.confirm-bar{position:sticky;bottom:max(12px,env(safe-area-inset-bottom));z-index:1;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#173c36;color:white;margin-top:20px;border-radius:15px;padding:12px 16px;box-shadow:0 5px 20px #14281b22}.confirm-bar span{font-size:14px}.confirm-bar button{background:#f0e4b7;color:#173c36}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.kakao{background:#fee500;color:#30291b}.notice{padding:13px 16px;background:#fff1d9;color:#755217;border-radius:12px;font-size:13px;line-height:1.7}.badge{font-size:11px;color:#5c7968;white-space:nowrap}#status{font-size:14px;line-height:1.6;color:#215c45;margin-top:12px}footer{text-align:center;color:#89958c;font-size:12px;line-height:1.8;padding:26px 0}#extra-list button{margin-left:8px;background:transparent;color:#8e493c;font-size:13px}#extra-list p{font-size:13px}#result{scroll-margin-top:12px}#output{min-height:420px}[hidden]{display:none!important}@media(max-width:390px){main{padding:20px 12px 30px}section,details{padding:16px}.person{min-width:67px;padding:9px 12px}.confirm-bar{padding:10px}.confirm-bar span{font-size:12px}}
+</style><style>footer small {
+  display: block;
+  margin-top: 9px;
+  font-size: 11px;
+  letter-spacing: .06em;
+}
+
+.danger {
+  background: #9c3f32;
+}
+
+.person.retired {
+  background: #f2e9e7;
+  border-color: #d8b8b2;
+  color: #7d4138;
+}
+
+.absence button {
+  width: 100%;
+  margin-top: 10px;
+}
+</style></head>
+<body><main>
+<header><h1>ACCOMPANY TECH 출근 보고</h1><p>변동 인원과 사유를 선택한 뒤 출근 보고를 만드세요.</p></header>
+<aside id="startup" role="status" aria-live="polite"><span id="startup-message">명단을 준비하고 있습니다. 오래 멈춰 있으면 다시 열기를 눌러주세요.</span><br><a id="startup-retry" href="?reload=1">다시 열기</a></aside>
+<noscript><p>보고서를 작성하려면 브라우저의 JavaScript 실행을 허용한 뒤 다시 열어주세요.</p></noscript>
+<script>// This guard intentionally uses basic syntax so it can report application parse errors.
+(function () {
+  var panel = document.getElementById('startup');
+  var message = document.getElementById('startup-message');
+  var retry = document.getElementById('startup-retry');
+  var initialized = false;
+  var deadline;
+  function retryURL() {
+    var url = new URL(window.location.href);
+    url.searchParams.set('reload', String(Date.now()));
+    retry.href = url.href;
+  }
+  function failed(code) {
+    clearTimeout(deadline);
+    panel.hidden = false;
+    document.documentElement.setAttribute('data-app-state', 'failed');
+    message.textContent = '화면을 준비하는 중 문제가 생겼습니다. 다시 열기로 재시도해 주세요. 저장한 기본 명단은 유지됩니다. (' + code + ')';
+    retryURL();
+  }
+  window.AttendanceStartup = {
+    ready: function () {
+      initialized = true;
+      clearTimeout(deadline);
+      panel.hidden = true;
+      document.documentElement.setAttribute('data-app-state', 'ready');
+    },
+    failed: failed
+  };
+  retry.onclick = function (event) {
+    if (initialized && !window.confirm('페이지를 다시 열면 오늘 선택과 작성 중인 글은 초기화됩니다. 다시 열까요?')) {
+      event.preventDefault();
+      return;
+    }
+    retryURL();
+  };
+  window.addEventListener('error', function (event) {
+    var target = event.target;
+    var resource = target && (target.src || target.href) || '';
+    var appFile = /\/(app|roster)\.js(?:\?|$)/.test(resource || event.filename || '');
+    var inlineApp = event.filename && event.filename.split('#')[0] === window.location.href.split('#')[0];
+    if (appFile || (!initialized && inlineApp)) failed('실행 오류');
+  }, true);
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted && !initialized) failed('복원 중단');
+  });
+  deadline = setTimeout(function () { if (!initialized) failed('시작 지연'); }, 8000);
+  document.documentElement.setAttribute('data-app-state', 'starting');
+  retryURL();
+})();
+</script>
+<div id="notice" class="notice" role="status" hidden></div>
+<section class="date-card"><label for="date">보고 날짜</label><input id="date" type="date" required><p class="hint">반차는 출근으로 계산하며, 사유에서 선택하면 반차 항목에 표시합니다.</p></section>
+<div id="totals" class="totals" aria-live="polite"></div>
+<section><div class="section-head"><h2>1. 변동 인원 선택</h2><button id="reset" class="text-button">선택 초기화</button></div><p class="hint">이름을 누르고 사유를 고르세요. 선택하지 않은 사람은 모두 출근입니다.</p><div id="roster"></div></section>
+<details><summary>빠진 인원 추가</summary><form id="add-form"><div class="two"><div><label for="add-org">소속</label><select id="add-org"><option value="partner">ACCOMPANY TECH</option></select></div><div><label for="add-group">파트</label><select id="add-group"></select></div></div><label for="add-name">이름</label><input id="add-name" required maxlength="30" placeholder="이름 입력"><label class="check"><input id="add-new" type="checkbox">오늘 신규 입사자입니다</label><button type="submit" class="secondary">오늘 명단에 추가</button><p class="hint">오늘만 추가됩니다. 이후에도 포함하려면 아래 기본 명단에도 등록하세요.</p></form><div id="extra-list"></div></details>
+<details id="settings"><summary>기본 명단 · 업체 설정</summary><p class="hint">파트 : 이름 이름 형식입니다. 변경 후 저장하세요. 퇴사자는 이름을 선택한 뒤 사유를 ‘퇴사’로 바꾸고 ‘퇴사 처리’를 누르면 오늘 보고에는 퇴사자로 남고 다음 보고부터 기본 명단에서 제외됩니다.</p><label for="company">업체명</label><input id="company"><label for="partner">기본 명단</label><textarea id="partner" rows="9"></textarea><p class="hint">2026년 10월 20일 기준: ACCOMPANY TECH 16명입니다.</p><button id="save" class="secondary">기본 설정 저장</button><p class="hint">기본 설정만 이 브라우저에 저장합니다. 매일의 결근 선택과 완성 글은 저장하지 않습니다. 페이지를 다시 열면 전원 출근으로 시작합니다.</p></details>
+<div class="confirm-bar"><span id="selection-count">결근 0명</span><button id="generate">확인 · 글 만들기</button></div>
+<section id="result" hidden><div class="section-head"><h2>2. 완성 글 확인</h2><span class="badge">직접 수정 가능</span></div><p id="stale" class="notice" hidden>명단이나 날짜가 변경되었습니다. ‘확인 · 글 만들기’를 다시 눌러주세요.</p><label for="output" class="hint">수정 내용까지 그대로 복사·공유됩니다.</label><textarea id="output" rows="24"></textarea><div class="actions"><button id="copy">텍스트 복사</button><button id="share" class="kakao">공유하기</button></div><p id="share-help" class="hint">휴대폰 공유 메뉴에서 카카오톡을 선택하세요. 카카오톡이 보이지 않으면 복사 후 붙여넣으세요.</p><div id="status" role="status" aria-live="polite"></div></section>
+<details><summary>아이폰 · 안드로이드 사용 안내</summary><p class="hint">이 주소를 아이폰 Safari 또는 안드로이드 Chrome·삼성 인터넷에서 열어 사용하세요. 카카오톡 안에서 열었을 때 복사나 공유가 안 되면 휴대폰 기본 브라우저에서 다시 열어주세요.</p><p class="hint">자주 사용하면 브라우저 메뉴의 홈 화면 추가 기능으로 바로가기를 만들 수 있습니다. 기본 명단은 브라우저별로 저장되므로 같은 브라우저를 계속 사용하세요.</p></details>
+<footer>선택 → 글 확인 → 복사 또는 공유<br>공유할 앱과 대화방은 직접 선택합니다.<small>Made by Chan</small></footer>
+</main><script>(function(root){
+'use strict';
+const defaults={company:'ACCOMPANY TECH',
+partner:`BULK : 이종섭 강경석 엄정태 안기석 변진석 이호동
+UPW : 오세익
+전기,진공 : 노명성 김우진
+S-GAS :
+CHEMICAL :
+CAD : 이효정 이예원 조은정 장채연 강민주 방수희
+설계지원 : 최강석`};
+function parseRoster(text,org){
+ const people=[],groups=[],seen=new Set();
+ text.split(/\r?\n/).forEach((line,i)=>{
+  if(!line.trim())return;
+  const m=line.match(/^\s*([^:：]+)[:：]\s*(.*?)\s*$/);
+  if(!m)throw new Error('명단 '+(i+1)+'행: 파트 : 이름 이름 형식으로 입력하세요.');
+  const group=m[1].trim();
+  if(groups.includes(group))throw new Error(group+' 파트가 중복되었습니다. 한 줄로 합쳐주세요.');
+  groups.push(group);
+  for(const name of m[2].split(/[\s,、]+/).filter(Boolean)){
+   if(/[\d/()（）]/.test(name))throw new Error(group+': 숫자 대신 이름만 입력하세요. 동명이인은 이름 뒤에 구분 문자를 붙여주세요.');
+   if(seen.has(name))throw new Error(name+' 이름이 중복되었습니다. 동명이인은 이름 뒤에 구분 문자를 붙여주세요.');
+   seen.add(name);people.push({id:JSON.stringify([org,group,name]),org,group,name});
+  }
+ });
+ if(!groups.length)throw new Error('최소 한 개 파트를 입력하세요.');
+ return {people,groups};
+}
+function updateRoster(text,person,remove){
+ const parsed=parseRoster(text,person.org),groups=[...parsed.groups];
+ if(!groups.includes(person.group))groups.push(person.group);
+ return groups.map(group=>{
+  const names=parsed.people.filter(p=>p.group===group&&(!remove||p.id!==person.id)).map(p=>p.name);
+  if(!remove&&group===person.group&&!names.includes(person.name))names.push(person.name);
+  return group+' : '+names.join(' ');
+ }).join('\n');
+}
+const removePerson=(text,person)=>updateRoster(text,person,true);
+const addPerson=(text,person)=>updateRoster(text,person,false);
+function summarize(people,states,org){
+ const all=people.filter(p=>p.org===org),active=all.filter(p=>(states[p.id]?.status||'출근')!=='퇴사');
+ const present=active.filter(p=>['출근','반차'].includes(states[p.id]?.status||'출근'));
+ return {total:active.length,present:present.length,absent:active.length-present.length,newCount:active.filter(p=>p.isNew).length,quit:all.filter(p=>states[p.id]?.status==='퇴사').length};
+}
+function generate(people,states,settings,groupMap){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(settings.date||''))throw new Error('보고 날짜를 선택하세요.');
+ const day=new Date(settings.date+'T12:00:00');
+ if(Number.isNaN(day.getTime())||day.getFullYear()!==+settings.date.slice(0,4)||day.getMonth()+1!==+settings.date.slice(5,7)||day.getDate()!==+settings.date.slice(8,10))throw new Error('올바른 보고 날짜를 선택하세요.');
+ const status=p=>states[p.id]?.status||'출근';
+ for(const p of people)if(!['출근','반차','연차','공가','결근','퇴사'].includes(status(p)))throw new Error(p.name+'의 출근 상태를 확인하세요.');
+ const org='partner',s=summarize(people,states,org),all=people.filter(p=>p.org===org);
+ const lines=[settings.date.slice(2,4)+'년 '+settings.date.slice(5,7)+'월 '+settings.date.slice(8,10)+'일','출근 보고','외주 ('+settings.company+')','',`총원 : ${s.present}/${s.total}`];
+ for(const group of [...new Set([...(groupMap[org]||[]),...all.map(p=>p.group)])]){
+   const members=all.filter(p=>p.group===group&&status(p)!=='퇴사'),attended=members.filter(p=>['출근','반차'].includes(status(p)));
+   lines.push(group+' : '+attended.length+'/'+members.length+(attended.length?' ('+attended.map(p=>p.name).join(' ')+')':''));
+  }
+  lines.push('');
+  for(const key of ['연차','공가','퇴사','반차','신규','결근']){
+   const members=all.filter(p=>key==='신규'?p.isNew&&status(p)!=='퇴사':status(p)===key);if(key==='결근'&&!members.length)continue;
+   lines.push(key+' : '+members.length+(members.length?' ('+members.map(p=>p.name+(key==='결근'&&states[p.id]?.reason?' - '+states[p.id].reason.replace(/[\r\n]+/g,' '):'')).join(' ')+')':''));
+  }
+ return lines.join('\n');
+}
+const api={defaults,parseRoster,removePerson,addPerson,summarize,generate};if(typeof module!=='undefined')module.exports=api;else root.Roster=api;
+})(typeof window!=='undefined'?window:globalThis);
+</script><script>(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const storageKey='accompany-attendance-settings-v1';
+let config={...Roster.defaults},base,states={},extras=[],stale=true,settingsDirty=false;
+function notice(text){$('notice').textContent=text;$('notice').hidden=!text;}
+function readBase(candidate){return {partner:Roster.parseRoster(candidate.partner,'partner')};}
+try{
+ const saved=JSON.parse(localStorage.getItem(storageKey)||'null');
+ if(saved){for(const key of Object.keys(config)){if(typeof saved[key]!=='string')throw new Error('invalid');}readBase(saved);config=Object.fromEntries(Object.keys(config).map(k=>[k,saved[k]]));}
+}catch(e){notice('저장된 설정을 읽지 못해 기본 명단을 불러왔습니다. 기본 설정을 확인해 주세요.');}
+base=readBase(config);
+for(const key of Object.keys(config))$(key).value=config[key];
+const localDate=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+$('date').value=localDate();let previousDate=$('date').value;
+const people=()=>[...base.partner.people,...extras];
+const element=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el;};
+function invalidate(){stale=true;$('stale').hidden=$('result').hidden;$('copy').disabled=true;$('share').disabled=true;$('status').textContent='';}
+function saveConfig(message){
+ try{localStorage.setItem(storageKey,JSON.stringify(config));notice(message);return true;}
+ catch(e){notice('현재 화면에는 반영했지만 브라우저에 저장하지 못했습니다. 페이지를 닫기 전에 기본 명단을 확인해 주세요.');return false;}
+}
+function retire(person){
+ if(!confirm(person.name+' 님을 기본 명단에서 제거할까요? 오늘 보고에는 퇴사자로 표시됩니다.'))return;
+ const key='partner';
+ config[key]=Roster.removePerson(config[key],person);$(key).value=config[key];
+ base=readBase(config);if(!extras.some(p=>p.id===person.id))extras.push({...person,retired:true});
+ states[person.id]={status:'퇴사',reason:''};settingsDirty=false;saveConfig(person.name+' 님을 퇴사 처리했습니다. 오늘 보고 확인 후 복사하세요.');invalidate();render();updateGroups();
+}
+function undoRetire(person){
+ const key='partner';
+ config[key]=Roster.addPerson(config[key],person);$(key).value=config[key];
+ base=readBase(config);extras=extras.filter(p=>p.id!==person.id);delete states[person.id];settingsDirty=false;saveConfig(person.name+' 님의 퇴사 처리를 취소했습니다.');invalidate();render();updateGroups();
+}
+function render(){
+ $('roster').replaceChildren();$('totals').replaceChildren();let absent=0,quit=0;
+ for(const org of ['partner']){
+  const title=config.company,s=Roster.summarize(people(),states,org);absent+=s.absent;quit+=s.quit;
+  const card=element('div','total');card.append(element('span','',title),element('strong','',`${s.present} / ${s.total}`),element('span','',`결근 ${s.absent}명`));$('totals').append(card);$('roster').append(element('h3','',title));
+  for(const group of [...new Set([...base[org].groups,...extras.filter(p=>p.org===org).map(p=>p.group)])]){
+   const members=people().filter(p=>p.org===org&&p.group===group);if(!members.length)continue;
+   $('roster').append(element('div','group-label',group));const names=element('div','names'),reasons=element('div');
+   for(const person of members){
+    const selected=!!states[person.id],button=element('button','person'+(person.retired?' retired':''),person.name);button.type='button';button.setAttribute('aria-pressed',String(selected));button.setAttribute('aria-label',`${title} ${group} ${person.name}, ${states[person.id]?.status||'출근'}`);
+    button.onclick=()=>{if(person.retired)return;if(selected)delete states[person.id];else states[person.id]={status:'연차',reason:''};invalidate();render();};names.append(button);
+    if(selected){
+     const box=element('div','absence'),label=element('label','',person.name+' · 사유'),select=element('select');
+     select.setAttribute('aria-label',person.name+' 사유');for(const status of ['연차','공가','반차','결근','퇴사']){const opt=element('option','',status==='결근'?'기타 결근':status);opt.value=status;select.append(opt);}select.value=states[person.id].status;
+     select.disabled=!!person.retired;select.onchange=()=>{states[person.id].status=select.value;invalidate();render();};label.append(select);box.append(label);
+     if(states[person.id].status==='결근'){const input=element('input');input.placeholder='사유 입력 (선택)';input.maxLength=60;input.value=states[person.id].reason;input.setAttribute('aria-label',person.name+' 기타 결근 사유');input.oninput=()=>{states[person.id].reason=input.value;invalidate();};box.append(input);}
+     if(states[person.id].status==='퇴사'){
+      const action=element('button',person.retired?'secondary':'danger',person.retired?'퇴사 처리 취소':'퇴사 처리 · 기본 명단에서 제거');action.type='button';action.onclick=()=>person.retired?undoRetire(person):retire(person);box.append(action);
+     }
+     reasons.append(box);
+    }
+   }
+   $('roster').append(names,reasons);
+  }
+ }
+ $('selection-count').textContent=`결근 ${absent}명`+(quit?` · 퇴사 ${quit}명`:'');
+ $('extra-list').replaceChildren();for(const p of extras){const row=element('p','',`${p.name} · ${p.group}${p.isNew?' · 신규':''}`),remove=element('button','','삭제');remove.onclick=()=>{extras=extras.filter(x=>x.id!==p.id);delete states[p.id];invalidate();render();};row.append(remove);$('extra-list').append(row);}
+}
+function updateGroups(){const org=$('add-org').value;$('add-group').replaceChildren();for(const group of base[org].groups){const option=element('option','',group);option.value=group;$('add-group').append(option);}}
+$('add-org').onchange=updateGroups;
+$('add-form').onsubmit=e=>{
+ e.preventDefault();const name=$('add-name').value.trim(),org=$('add-org').value,group=$('add-group').value;
+ if(!name||/[\s,\d/()（）:：]/.test(name)){notice('이름 한 명만 입력하세요. 공백이나 숫자, 구분 기호는 사용할 수 없습니다.');return;}
+ if(people().some(p=>p.org===org&&p.name===name)){notice('같은 소속에 이미 있는 이름입니다. 동명이인은 이름 뒤에 구분 문자를 붙여주세요.');return;}
+ extras.push({id:JSON.stringify([org,group,name]),org,group,name,isNew:$('add-new').checked});$('add-name').value='';$('add-new').checked=false;notice('');invalidate();render();
+};
+for(const key of Object.keys(config))$(key).oninput=()=>{settingsDirty=true;invalidate();};
+$('save').onclick=()=>{
+ const candidate=Object.fromEntries(Object.keys(config).map(key=>[key,$(key).value.trim()]));
+ try{if(!candidate.company)throw new Error('업체명을 입력하세요.');const parsed=readBase(candidate);
+  if((Object.keys(states).length||extras.length)&&!confirm('기본 명단을 저장하면 오늘 선택과 추가 인원이 초기화됩니다. 저장할까요?'))return;
+  config=candidate;base=parsed;states={};extras=[];settingsDirty=false;invalidate();render();updateGroups();
+  saveConfig('기본 설정을 저장했습니다. 오늘 결근 인원을 선택해 주세요.');
+ }catch(e){notice(e.message);}
+};
+$('date').onchange=()=>{
+ if((Object.keys(states).length||extras.length||!$('result').hidden)&&!confirm('날짜를 변경하면 선택 인원과 완성 글이 초기화됩니다. 변경할까요?')){$('date').value=previousDate;return;}
+ previousDate=$('date').value;states={};extras=[];$('result').hidden=true;$('output').value='';invalidate();render();
+};
+$('reset').onclick=()=>{if((Object.keys(states).length||extras.length)&&!confirm('결근 선택과 오늘 추가 인원을 모두 초기화할까요?'))return;states={};extras=[];invalidate();render();};
+$('generate').onclick=()=>{
+ if(settingsDirty){notice('수정한 기본 설정을 먼저 저장해 주세요.');$('settings').open=true;$('settings').scrollIntoView({behavior:'smooth'});return;}
+ if(!$('result').hidden&&!stale&&$('output').value&&!confirm('완성 글을 새로 만들까요? 직접 수정한 내용은 덮어씁니다.'))return;
+ try{$('output').value=Roster.generate(people(),states,{...config,date:$('date').value},{partner:base.partner.groups});stale=false;$('result').hidden=false;$('stale').hidden=true;$('copy').disabled=false;$('share').disabled=false;$('status').textContent='';notice('');$('result').scrollIntoView({behavior:'smooth'});}catch(e){notice(e.message);}
+};
+function ready(){if(stale){$('status').textContent='확인 · 글 만들기를 먼저 눌러주세요.';return false;}if(!$('output').value.trim()){$('status').textContent='복사·공유할 글이 없습니다.';return false;}return true;}
+function selectText(){$('output').focus();$('output').select();$('output').setSelectionRange(0,$('output').value.length);}
+const selectButton=element('button','secondary','글 전체 선택');selectButton.type='button';selectButton.id='select-text';selectButton.hidden=true;
+$('status').before(selectButton);
+selectButton.onclick=()=>{if(!ready())return;selectText();$('status').textContent='글을 선택했습니다. 선택한 글을 길게 눌러 복사하세요. PC에서는 Ctrl+C를 누르세요.';};
+$('copy').onclick=async()=>{
+ if(!ready())return;
+ try{if(!navigator.clipboard?.writeText)throw new Error('unsupported');await navigator.clipboard.writeText($('output').value);$('status').textContent='복사했습니다. 카카오톡 대화방에 붙여넣으세요.';}
+ catch(e){selectText();let copied=false;try{copied=document.execCommand('copy');}catch(e){}selectButton.hidden=copied;$('status').textContent=copied?'복사했습니다. 카카오톡 대화방에 붙여넣으세요.':'자동 복사를 사용할 수 없습니다. 글 전체 선택 버튼을 누르고 글을 길게 눌러 복사하세요. 카카오톡 안에서 열었다면 기본 브라우저에서 다시 열어보세요.';}
+};
+$('share').onclick=async()=>{
+ if(!ready())return;
+ if(!navigator.share){$('status').textContent='이 환경에서는 공유 메뉴를 열 수 없습니다. 텍스트 복사를 이용하세요.';return;}
+ try{const payload={text:$('output').value};if(navigator.canShare&&!navigator.canShare(payload)){$('status').textContent='이 브라우저에서 텍스트 공유를 지원하지 않습니다. 텍스트 복사를 이용하세요.';return;}await navigator.share(payload);$('status').textContent='공유 메뉴에 글을 전달했습니다. 전송 여부는 선택한 앱에서 확인하세요.';}
+ catch(e){$('status').textContent=e.name==='AbortError'?'공유를 취소했거나 공유할 앱이 없습니다.':'공유 메뉴를 열지 못했습니다. 텍스트 복사를 이용하세요.';}
+};
+if(!navigator.share)$('share-help').textContent='현재 환경은 공유 메뉴를 지원하지 않습니다. 복사를 이용하세요. 휴대폰 공유 기능은 지원 브라우저의 HTTPS 주소에서 사용할 수 있습니다.';
+render();updateGroups();invalidate();
+// Safari may restore an already initialized page. Repair only missing generated
+// elements; never reset the date, selections, edited output or stored settings.
+function resumePage(){
+ if(document.visibilityState==='hidden')return;
+ try{
+  if(!$('totals').childElementCount||(!$('roster').childElementCount&&people().length))render();
+ }catch(e){if(window.AttendanceStartup)window.AttendanceStartup.failed('복원 오류');}
+}
+window.addEventListener('pageshow',resumePage);
+document.addEventListener('visibilitychange',resumePage);
+if(window.AttendanceStartup)window.AttendanceStartup.ready();
+})();
+</script></body></html>
